@@ -9,7 +9,7 @@ import java.util.zip.Deflater;
 import java.util.zip.Inflater;
 
 @Component
-public class UserPhotoUtil {
+public class ImageStorageUtil {
 
     public static byte[] compressImage(byte[] data){
         Deflater deflater = new Deflater();

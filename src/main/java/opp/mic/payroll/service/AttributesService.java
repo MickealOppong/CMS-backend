@@ -1,5 +1,6 @@
 package opp.mic.payroll.service;
 
+import opp.mic.payroll.exceptions.AttributeNotFoundException;
 import opp.mic.payroll.exceptions.CategoryNotFoundException;
 import opp.mic.payroll.model.Attributes;
 import opp.mic.payroll.model.ProductAttributeRequest;
@@ -36,47 +37,61 @@ public class AttributesService {
          }
         return productAttributes;
     }
-
+    public List<Attributes> getAllAttributesAsList(){
+        List<Attributes>  productAttributes = attributesRepository.findAll();
+        for(Attributes pa:productAttributes){
+            pa.setProductSKU(productSKURepository.findAll().stream()
+                    .filter(f->f.getAttributes().getId().equals(pa.getId())).toList());
+        }
+        return productAttributes;
+    }
     @Transactional
     public Attributes save(ProductAttributeRequest productAttributeRequest){
 
         //check whether attribute already exist
         Optional<Attributes> savedAttribute = attributesRepository.findByName(productAttributeRequest.name());
-        System.out.println(savedAttribute);
+
         if(savedAttribute.isPresent()){
             //save only new value
-            ProductSKU productSKU = new ProductSKU(savedAttribute.get(),productAttributeRequest.value());
+            ProductSKU productSKU = new ProductSKU(savedAttribute.get(), productAttributeRequest.description(),
+                    productAttributeRequest.value());
             productSKURepository.save(productSKU);
             return savedAttribute.get();
         }
         //attribute does not exist ,save new attribute and value
         Attributes attributes = new Attributes(productAttributeRequest.name());
         Attributes attribute= attributesRepository.save(attributes);
-        ProductSKU productSKU = new ProductSKU(attribute,productAttributeRequest.value());
+        ProductSKU productSKU = new ProductSKU(attribute,productAttributeRequest.description(),
+                productAttributeRequest.value());
         productSKURepository.save(productSKU);
         return attribute;
     }
 
     public Attributes getById(Long id){
         Attributes attributes= attributesRepository.findById(id)
-                .orElseThrow(()-> new CategoryNotFoundException("Category "+id +" does not exist"));
+                .orElseThrow(()-> new AttributeNotFoundException("Attribute "+id +" does not exist"));
       List<ProductSKU> sku= productSKURepository.findAll().stream()
-              .filter(a->a.getAttributes().getId().equals(attributes.getId())).toList();
+              .filter(a->a.getAttributes().getId().equals(attributes.getId())).collect(Collectors.toList());
       attributes.setProductSKU(sku);
       return attributes;
     }
-
+    public Attributes getByName(String name){
+        Attributes attributes= attributesRepository.findByName(name)
+                .orElseThrow(()-> new AttributeNotFoundException("Attribute "+name+" does not exist"));
+        List<ProductSKU> sku= productSKURepository.findAll().stream()
+                .filter(a->a.getAttributes().getId().equals(attributes.getId())).collect(Collectors.toList());
+        attributes.setProductSKU(sku);
+        return attributes;
+    }
+    @Transactional
     public boolean deleteAttribute(Long id){
         Attributes attributes= attributesRepository.findById(id)
                 .orElseThrow(()-> new CategoryNotFoundException("Category "+id +" does not exist"));
         List<ProductSKU> sku= productSKURepository.findAll().stream()
                 .filter(a->a.getAttributes().getId().equals(attributes.getId())).toList();
-        if(sku.size()>0){
-            return false;
-        }else{
+            sku.forEach(p->productSKURepository.deleteById(p.getId()));
             attributesRepository.deleteById(id);
             return true;
-        }
 
     }
 
@@ -85,5 +100,41 @@ public class AttributesService {
         return productSKURepository.findById(id).orElse(null);
     }
 
+    public ProductSKU updateSKU(Long id,ProductAttributeRequest productAttributeRequest){
+        Optional<ProductSKU> productSKU = productSKURepository.findById(id);
+        ProductSKU updatedSKU = null;
+        if(productSKU.isPresent()){
+            ProductSKU sku = productSKU.get();
+            sku.setSkuValue(productAttributeRequest.value());
+            sku.setDescription(productAttributeRequest.description());
+            updatedSKU = productSKURepository.save(productSKU.get());
+        }
+        return updatedSKU;
+    }
+
+
+    /*
+    public Attributes updateProduct(String name, Product product){
+      Attributes attributes =attributesRepository.findByName(name)
+              .orElseThrow(()-> new AttributeNotFoundException(name+" does not exist"));
+        attributes.getProducts().add(product);
+      attributesRepository.save(attributes);
+      return attributes;
+    }
+
+
+     */
+
+    /*
+    public List<Attributes> getAll(Long id){
+        for(Attributes pa:productAttributes){
+            pa.setProductSKU(productSKURepository.findAll().stream()
+                    .filter(f->f.getAttributes().getId().equals(pa.getId())).toList());
+        }
+        return productAttributes;
+    }
+
+
+     */
 
 }

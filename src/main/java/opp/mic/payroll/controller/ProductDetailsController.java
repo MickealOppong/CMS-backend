@@ -8,9 +8,13 @@ import opp.mic.payroll.service.AttributesService;
 import opp.mic.payroll.service.CategoryService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.zip.DataFormatException;
 
 @RestController
 @RequestMapping("/api/products")
@@ -26,9 +30,13 @@ public class ProductDetailsController {
     }
 
     @GetMapping("/categories")
-    public ResponseEntity<Page<Category>> allCategories(int page){
+    public ResponseEntity<Page<Category>> allCategories(int page) throws DataFormatException {
 
         return ResponseEntity.ok().body(categoryService.getAllCategories(page));
+    }
+    @GetMapping("/categoryList")
+    public ResponseEntity<List<Category>> allCategoriesAsList(){
+        return ResponseEntity.ok().body(categoryService.getAllCategoriesAsList());
     }
 
     @GetMapping("/attributes")
@@ -36,10 +44,13 @@ public class ProductDetailsController {
         return ResponseEntity.ok().body(attributesService.getAllAttributes(page));
     }
 
+    @GetMapping("/attributeList")
+    public ResponseEntity<List<Attributes>>  allAttributesAsList(){
+        return ResponseEntity.ok().body(attributesService.getAllAttributesAsList());
+    }
     @PostMapping("/categories")
-    public ResponseEntity<String> add(@RequestBody Category productCategory) throws IOException {
-        System.out.println(productCategory);
-      Category category = categoryService.save(productCategory);
+    public ResponseEntity<String> add(@RequestParam String name, @RequestParam String description) throws IOException {
+        Category category = categoryService.save(name,description);
       if(category==null){
           return ResponseEntity.badRequest().body("Category already exist");
       }
@@ -48,7 +59,7 @@ public class ProductDetailsController {
 
 
     @PatchMapping("/categories/{id}")
-    public ResponseEntity<String> update(@RequestParam Long id,@RequestBody Category productCategory) throws IOException {
+    public ResponseEntity<Category> update(@RequestParam Long id,@RequestBody Category productCategory) throws IOException {
         Category category = categoryService.getById(id);
         if(productCategory.getName() !=null){
             category.setName(productCategory.getName());
@@ -64,12 +75,21 @@ public class ProductDetailsController {
         }
         Category updatedCategory = categoryService.updateCategory(category);
         if(updatedCategory ==null){
-            return ResponseEntity.badRequest().body("Update failed");
+            return ResponseEntity.badRequest().body(null);
         }
-        return ResponseEntity.ok().body("Category updated");
+        return ResponseEntity.ok().body(updatedCategory);
     }
 
-    @PostMapping("/attributes")
+    @PatchMapping("/attribute/{id}")
+    public ResponseEntity<String> update(@RequestParam Long id,@RequestBody ProductAttributeRequest productAttributeRequest) {
+        ProductSKU sku = attributesService.updateSKU(id,productAttributeRequest);
+        if(sku ==null){
+            return ResponseEntity.badRequest().body("Could not perform update");
+        }
+        return ResponseEntity.ok().body("Update successful");
+    }
+
+    @PostMapping("/attribute")
     public ResponseEntity<String> add(@RequestBody ProductAttributeRequest productAttributeRequest){
         Attributes attribute = attributesService.save(productAttributeRequest);
         if(attribute ==null){
@@ -84,6 +104,9 @@ public class ProductDetailsController {
     }
 
 
+
+
+    @PreAuthorize("hasRole('SCOPE_ROLE_ADMIN')")
     @DeleteMapping("/category/{id}")
     public ResponseEntity<String> deleteCategory(@RequestParam Long id) {
       Category category =  categoryService.delete(id);
@@ -93,12 +116,14 @@ public class ProductDetailsController {
         return ResponseEntity.ok().body("Could not perform operation");
     }
 
+
     @GetMapping("/attribute/{id}")
     public ResponseEntity<Attributes> getAttribute(@RequestParam Long id){
         return ResponseEntity.ok().body(attributesService.getById(id));
     }
 
 
+    @PreAuthorize("hasRole('SCOPE_ROLE_ADMIN')")
     @DeleteMapping("/attribute/{id}")
     public ResponseEntity<String> deleteAttribute(@PathVariable Long id) {
        boolean category =  attributesService.deleteAttribute(id);
@@ -107,6 +132,7 @@ public class ProductDetailsController {
         }
         return ResponseEntity.ok().body("Attribute has children and must be deleted first");
     }
+
 
 
     @DeleteMapping("/sku/{id}")

@@ -22,7 +22,7 @@ public class AppImageDetails extends LogEntity {
     private String path;
      @JsonBackReference
     @OneToOne
-    @JoinColumn(name = "fk_id",referencedColumnName = "id")
+    @JoinColumn(name = "fk_uid",referencedColumnName = "id")
     private AppUser appUser;
 
     @ManyToOne

@@ -99,8 +99,13 @@ public class PhotoStorageServiceImpl implements PhotoStorageService {
     }
 
     @Override
-    public void delete() {
-
+    public void delete(String file) {
+        Path path = toPath(file);
+        try {
+            Files.deleteIfExists(path);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static void main(String[] args) {

@@ -43,7 +43,7 @@ public class UserAuthTokenService {
         JwtClaimsSet claimsSet = JwtClaimsSet.builder()
                 .issuer("local")
                 .issuedAt(Instant.now())
-                .expiresAt(Instant.now().plus(1, ChronoUnit.HOURS))
+                .expiresAt(Instant.now().plus(5, ChronoUnit.HOURS))
                 .subject(authentication.getName())
                 .claim("scope",roles)
                 .build();

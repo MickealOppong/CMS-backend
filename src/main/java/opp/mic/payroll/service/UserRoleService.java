@@ -1,8 +1,6 @@
 package opp.mic.payroll.service;
 
-import opp.mic.payroll.model.RoleDTO;
-import opp.mic.payroll.model.Roles;
-import opp.mic.payroll.model.UserAuthority;
+import opp.mic.payroll.model.*;
 import opp.mic.payroll.repository.RoleRepository;
 import opp.mic.payroll.repository.UserAuthorityRepository;
 import org.springframework.data.domain.Page;
@@ -65,8 +63,12 @@ public class UserRoleService {
         return new RoleDTO(role,authMap);
     }
 
-    public List<String> all(){
-        return roleRepository.findAll().stream().map(Roles::getRoleName).collect(Collectors.toList());
+    public Roles getRole(String role){
+        return roleRepository.findByRoleName(role).orElse(null);
+    }
+
+    public List<RoleListDTO> all(){
+       return roleRepository.findAll().stream().map(p->new RoleListDTO(p.getRoleName(), p.getId())).toList();
     }
 
     @Transactional

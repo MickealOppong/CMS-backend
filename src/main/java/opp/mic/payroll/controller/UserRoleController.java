@@ -2,10 +2,7 @@ package opp.mic.payroll.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import opp.mic.payroll.model.RoleDTO;
-import opp.mic.payroll.model.Roles;
-import opp.mic.payroll.model.RolesRequest;
-import opp.mic.payroll.model.UserAccess;
+import opp.mic.payroll.model.*;
 import opp.mic.payroll.service.UserRoleService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -51,7 +48,7 @@ public class UserRoleController {
 
     @PreAuthorize("hasAnyRole('SCOPE_ROLE_MANAGER','SCOPE_ROLE_ADMIN','SCOPE_ROLE_USER')")
     @GetMapping("/roleList")
-    public ResponseEntity<List<String>> roleList(){
+    public ResponseEntity<List<RoleListDTO>> roleList(){
         return ResponseEntity.ok().body(userRoleService.all());
     }
 

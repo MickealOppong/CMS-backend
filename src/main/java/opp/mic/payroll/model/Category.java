@@ -1,21 +1,19 @@
 package opp.mic.payroll.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToMany;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import opp.mic.payroll.util.LogEntity;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
-@Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Data
 public class Category extends LogEntity {
 
     @Id @GeneratedValue
@@ -25,14 +23,25 @@ public class Category extends LogEntity {
     private Long quantity;
     private Long sale;
 
-    @ManyToMany(mappedBy = "categoryList")
-    private Set<Product> product = new HashSet<>();
+    @Transient
+    private String icon;
 
-    public Category(String name, String description, Long quantity) {
+
+    @JsonBackReference
+    @ManyToMany
+    @JoinTable(name = "product_category",
+            joinColumns=@JoinColumn(name = "category_id",referencedColumnName = "id") ,
+            inverseJoinColumns=@JoinColumn(name = "product_id",referencedColumnName = "id"))
+    private List<Product> products = new ArrayList<>();
+
+
+
+    public Category(String name, String description) {
         this.name = name;
         this.description = description;
-        this.quantity = quantity;
     }
+
+
 
     public Category(String name, String description, Long quantity, Long sale) {
         this.name = name;
@@ -40,6 +49,7 @@ public class Category extends LogEntity {
         this.quantity = quantity;
         this.sale = sale;
     }
+
 
 
 }

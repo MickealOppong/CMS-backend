@@ -21,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.zip.DataFormatException;
@@ -61,7 +62,7 @@ public class UserService implements UserDetailsService {
     public AppUser getUser(String username){
         Optional<AppUser> user =  userRepository.findByUsername(username);
         if (user.isPresent()) {
-            Optional<AppImageDetails> photo = appImageDetailsRepository.findById(user.get().getId());
+            Optional<AppImageDetails> photo = appImageDetailsRepository.findByUserId(user.get().getId());
             if (photo.isPresent()) {
                 Resource uri = photoStorageService.loadAsResource(photo.get().getPath());
                 String url = MvcUriComponentsBuilder.fromMethodName(AppImageController.class, "serveFile",
@@ -110,7 +111,7 @@ public class UserService implements UserDetailsService {
             if (photo.isPresent()) {
                 Resource uri = photoStorageService.loadAsResource(photo.get().getPath());
                 String url = MvcUriComponentsBuilder.fromMethodName(AppImageController.class, "serveFile",
-                        uri.getFilename().toString()).build().toUri().toString();
+                        uri.getFilename()).build().toUri().toString();
                 user.get().setImage(url);
             }
         }
@@ -120,14 +121,10 @@ public class UserService implements UserDetailsService {
     @Transactional
     public AppUser save(AppUser appUser, MultipartFile file) throws IOException {
         AppUser user = userRepository.save(appUser);
-       // Optional<Roles> role = roleRepository.findByRoleName(appUser.getRoles().getName());
-        //user.setRole(role.get().getRoleName());
         AppImageDetails appImageDetails = AppImageDetails.builder()
                 .path(storageLocation.getLocation()+"/"+user.getUsername()+"-"+file.getOriginalFilename())
                 .type(file.getContentType())
                 .build();
-       // Roles role = new Roles("USER");
-        //user.setRole(role);
         appImageDetails.setAppUser(user);
         appImageDetailsRepository.save(appImageDetails);
         photoStorageService.store(file,user.getUsername());
@@ -138,8 +135,20 @@ public class UserService implements UserDetailsService {
       return userRepository.save(appUser);
     }
 
-    public List<String> all(){
-        return userRepository.findAll().stream().map(AppUser::getUsername).toList();
+    public List<UserListDTO> all(){
+      List<AppUser> users= userRepository.findAll();
+      List<UserListDTO> userList = new ArrayList<>();
+      for(AppUser user :users){
+        AppImageDetails photo=  appImageDetailsRepository.findByUserId(user.getId()).orElse(null);
+        if(photo != null){
+            Resource uri = photoStorageService.loadAsResource(photo.getPath());
+            String url = MvcUriComponentsBuilder.fromMethodName(AppImageController.class, "serveFile",
+                    uri.getFilename()).build().toUri().toString();
+            user.setImage(url);
+        }
+        userList.add(new UserListDTO(user.getFullname(),user.getId(),user.getImage()));
+      }
+      return userList;
     }
 
     public AppUser addRole(String username,String roleName)  {
@@ -177,7 +186,8 @@ public class UserService implements UserDetailsService {
         userRepository.saveAll(appUser);
     }
 
-    public AppUser updateUserInfo(Long id,UserInfoUpdateRequest infoUpdateRequest){
+    @Transactional
+    public AppUser updateUserInfo(Long id,UserInfoUpdateRequest infoUpdateRequest,MultipartFile file){
         AppUser appUser = userRepository.findById(id).orElseThrow(()->new UserNotFoundException("user does not exist"));
         if(infoUpdateRequest.fullname()!=null){
             appUser.setFullname(infoUpdateRequest.fullname());
@@ -200,19 +210,39 @@ public class UserService implements UserDetailsService {
             appUser.setCredentialsNonExpired(infoUpdateRequest.credentialsNonExpired());
 
         AddressBook addressBook =addressBookRepository.findByUser(appUser.getId()).orElse(null);
-        if(infoUpdateRequest.street()!=null){
-            addressBook.setStreet(infoUpdateRequest.street());
+        if(addressBook !=null){
+            if(infoUpdateRequest.street()!=null){
+                addressBook.setStreet(infoUpdateRequest.street());
+            }
+            if(infoUpdateRequest.city()!=null){
+                addressBook.setCity(infoUpdateRequest.city());
+            }
+            if(infoUpdateRequest.zipCode()!=null){
+                addressBook.setZipCode(infoUpdateRequest.zipCode());
+            }
+            if(infoUpdateRequest.country()!=null){
+                addressBook.setCountry(infoUpdateRequest.country());
+            }
+            addressBookRepository.save(addressBook);
+        }else{
+            AddressBook newAddress = new AddressBook(infoUpdateRequest.street(), infoUpdateRequest.city(), infoUpdateRequest.zipCode(),
+                    infoUpdateRequest.country(),appUser);
+            addressBookRepository.save(newAddress);
         }
-        if(infoUpdateRequest.city()!=null){
-            addressBook.setCity(infoUpdateRequest.city());
+        if(!file.isEmpty()){
+            photoStorageService.store(file, infoUpdateRequest.username());
+            Optional<AppImageDetails> imageDetails = appImageDetailsRepository.findByUserId(id);
+            if (imageDetails.isPresent()) {
+                AppImageDetails image = imageDetails.get();
+                image.setPath(storageLocation.getLocation() + "/" + appUser.getUsername() + "-" + file.getOriginalFilename());
+                image.setType(file.getContentType());
+                appImageDetailsRepository.save(imageDetails.get());
+            } else {
+                AppImageDetails appImageDetails = new AppImageDetails(file.getContentType(), storageLocation.getLocation() + "/" + appUser.getUsername() + "-" + file.getOriginalFilename(), appUser);
+                appImageDetailsRepository.save(appImageDetails);
+            }
         }
-        if(infoUpdateRequest.zipCode()!=null){
-            addressBook.setZipCode(infoUpdateRequest.zipCode());
-        }
-        if(infoUpdateRequest.country()!=null){
-            addressBook.setCountry(infoUpdateRequest.country());
-        }
-        addressBookRepository.save(addressBook);
+
        return   userRepository.save(appUser);
 
     }

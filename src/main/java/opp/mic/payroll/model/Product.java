@@ -1,55 +1,74 @@
 package opp.mic.payroll.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import opp.mic.payroll.util.LogEntity;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
+@EqualsAndHashCode(callSuper = true)
 @Entity
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class Product extends LogEntity {
 
-    @Id @GeneratedValue
+    @Id @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
+
     private String name;
     private String description;
-    private String category;
-    private boolean isFeatured ;
-    private boolean isOnSale;
-    private boolean isNewArrival;
-    private boolean status;
-    private String company;
-    private String gender;
-    private BigDecimal purchasePrice;
-    private BigDecimal regularPrice;
-    private BigDecimal salePrice;
-    private Long quantity;
+    private String features;
+/*
+    @Enumerated(EnumType.STRING)
+    private Status status;
+
+ */
+
+   private Long quantity;
+   private BigDecimal regularPrice;
+   private BigDecimal salePrice;
+
+    @Transient
+    private List<String> images = new ArrayList<>();
+
+    @JsonManagedReference
+    @ManyToMany(mappedBy = "products")
+    private List<Category> categories = new ArrayList<>();
+
+    /*
+    @JsonManagedReference
+    @ManyToMany(mappedBy = "products")
+    private Set<Attributes> attributes= new HashSet<>();
+*/
 
 
-    @OneToMany(mappedBy = "product")
-    private List<AppImageDetails> appImageDetails = new ArrayList<>();
+    public Product(String name, String description,String features, Long quantity, BigDecimal regularPrice,
+                   BigDecimal salePrice) {
+        this.name = name;
+        this.description = description;
+        this.features = features;
+        this.quantity = quantity;
+        this.regularPrice = regularPrice;
+        this.salePrice = salePrice;
+    }
 
-    @OneToMany(mappedBy = "product")
-    private List<ProductTransaction> productTransaction = new ArrayList<>();
+    public Product(String name, String description,String features, Long quantity, BigDecimal regularPrice, BigDecimal salePrice, List<String> images,
+                   List<Category> categories) {
+        this.name = name;
+        this.description = description;
+        this.features = features;
+        this.quantity = quantity;
+        this.regularPrice = regularPrice;
+        this.salePrice = salePrice;
+        this.images = images;
+        this.categories = categories;
+    }
 
-    @ManyToMany
-    @JoinTable(name = "product_attribute",
-            joinColumns=@JoinColumn(name = "product_id",referencedColumnName = "id") ,
-            inverseJoinColumns=@JoinColumn(name = "attribute_id",referencedColumnName = "id"))
-    private Set<Attributes> attributes =new HashSet<>();
-
-    @ManyToMany
-    @JoinTable(name = "product_category",
-            joinColumns=@JoinColumn(name = "product_id",referencedColumnName = "id") ,
-            inverseJoinColumns=@JoinColumn(name = "category_id",referencedColumnName = "id"))
-    private Set<Category> categoryList = new HashSet<>();
 }

@@ -1,16 +1,16 @@
 package opp.mic.payroll.model;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import opp.mic.payroll.util.LogEntity;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Entity
 @Data
@@ -22,19 +22,32 @@ public class Attributes extends LogEntity {
     private Long id;
     private String name;
 
+
+    /*
     @JsonManagedReference
-    @OneToMany(fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "attributes",fetch = FetchType.EAGER)
     private List<ProductSKU> productSKU = new ArrayList<>();
 
-    @ManyToMany(mappedBy = "attributes")
-    private Set<Product> product = new HashSet<>();
+     */
 
+   @Transient
+    private List<ProductSKU> productSKU = new ArrayList<>();
+
+    /*
+    @JsonBackReference
+    @ManyToMany
+    @JoinTable(name = "product_attributes",
+            joinColumns=@JoinColumn(name = "attribute_id",referencedColumnName = "id") ,
+            inverseJoinColumns=@JoinColumn(name = "product_id",referencedColumnName = "id"))
+    private List<Product> products = new ArrayList<>();
+
+     */
 
     public Attributes(String name) {
         this.name = name;
     }
 
-    public Attributes(String name, List<ProductSKU> productSKU) {
+    public Attributes(String name,List<ProductSKU> productSKU) {
         this.name = name;
         this.productSKU = productSKU;
     }

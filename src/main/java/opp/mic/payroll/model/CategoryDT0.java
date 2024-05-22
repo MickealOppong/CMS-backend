@@ -1,6 +1,6 @@
 package opp.mic.payroll.model;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 
-public record CategoryDT0(long id, String name, String description, Long quantity, Long sale, Instant createAt) {
+public record CategoryDT0(Long id, String name, String description, Long quantity, Long sale, LocalDateTime createAt) {
 }

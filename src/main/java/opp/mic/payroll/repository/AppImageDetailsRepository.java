@@ -13,6 +13,9 @@ public interface AppImageDetailsRepository extends CrudRepository<AppImageDetail
     Optional<AppImageDetails> findByPath(String path);
     List<AppImageDetails> findAll();
 
-    @Query(value = "SELECT * FROM photos u where u.fk_id=?",nativeQuery = true)
+    @Query(value = "SELECT * FROM photos u where u.fk_uid=?",nativeQuery = true)
     Optional<AppImageDetails> findByUserId(Long id);
+
+    @Query(value = "SELECT * FROM photos u where u.fk_pid=?",nativeQuery = true)
+    List<AppImageDetails> findByProductId(Long id);
 }

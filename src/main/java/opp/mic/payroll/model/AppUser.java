@@ -67,6 +67,13 @@ public class AppUser extends LogEntity implements UserDetails, Serializable {
         roles.add(role);
     }
 
+    public AppUser(String username, String fullname, String telephone, String password, String gender) {
+        this.username = username;
+        this.fullname = fullname;
+        Telephone = telephone;
+        this.password = password;
+        this.gender = gender;
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
