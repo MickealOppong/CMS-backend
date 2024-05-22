@@ -2,6 +2,7 @@ package opp.mic.cms.controller;
 
 import jakarta.validation.Valid;
 import opp.mic.cms.model.CurrencyRate;
+import opp.mic.cms.model.CurrencyRateRequest;
 import opp.mic.cms.model.TransCurrency;
 import opp.mic.cms.service.TransCurrencyService;
 import org.springframework.data.domain.Page;
@@ -31,9 +32,8 @@ public class CurrencyController {
     @GetMapping("/rates")
     public List<CurrencyRate> all(@RequestParam Long id,@RequestParam(required = false)
     String from,@RequestParam(required = false) String to){
-        LocalDate fromDate = LocalDate.parse(from);
-        LocalDate toDate = LocalDate.parse(to);
-        return transCurrencyService.allRates(id,fromDate,toDate);
+        CurrencyRateRequest currencyRateRequest = new CurrencyRateRequest(id,from,to);
+        return transCurrencyService.allRates(currencyRateRequest.getId(),currencyRateRequest.getFrom(),currencyRateRequest.getTo());
     }
 
 

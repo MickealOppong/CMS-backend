@@ -10,7 +10,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -58,8 +57,8 @@ public class TransCurrencyService {
       List<CurrencyRate> currencyRates = currencyRateRepository.findAll().stream()
               .filter(item->item.getTransCurrency().getRecId().equals(id)).toList();
       return currencyRates.stream()
-              .filter(f->f.getDate().isAfter(from.minus(1, ChronoUnit.DAYS))
-                      && f.getDate().isBefore(to.plus(1,ChronoUnit.DAYS))).toList();
+              .filter(f->(f.getDate().isAfter(from) || f.getDate().equals(from))
+                      && (f.getDate().isBefore(to) || f.getDate().equals(to))).toList();
     }
 
     public Optional<TransCurrency> getCurrencyRate(String currency){
